@@ -1,16 +1,19 @@
 function Canvas(width, height, res) {
   this.canvas = document.getElementById("canvas");
   this.ctx = this.canvas.getContext("2d");
+  this.width = Math.round(width / res);
+  this.height = Math.round(height / res);
   this.canvas.width = width;
   this.canvas.height = height;
-  this.width = width / res;
-  this.height = height / res;
   this.res = res
   this.grid = [];
 }
 
 Canvas.prototype.initialise = function () {
-  this.createBoard();
+  this.createGrid();
+  this.drawBoard();
+  this.drawPoints();
+  this.drawLines();
 }
 
 Canvas.prototype.createGrid = function () {
@@ -31,17 +34,35 @@ Canvas.prototype.getState = function (i, j) {
   return (a * 1) + (b * 2) + (c * 4) + (d * 8);
 }
 
+Canvas.prototype.drawBoard = function () {
+  this.ctx.fillStyle = "grey";
+  this.ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
 
+Canvas.prototype.drawPoint = function (i, j, radius) {
+  this.ctx.beginPath();
+  this.ctx.arc(j * this.res, i * this.res, radius, 0, 2 * Math.PI);
+  this.ctx.fillStyle = `rgb(
+    ${255 * this.grid[i][j]},
+    ${255 * this.grid[i][j]},
+    ${255 * this.grid[i][j]}
+    )`;
+  this.ctx.fill();
+}
 
 Canvas.prototype.drawPoints = function () {
   for (i = 0; i <= this.height; i++) {
     for (j = 0; j <= this.width; j++) {
-      this.ctx.beginPath();
-      this.ctx.arc(j * this.res, i * this.res, 2, 0, 2 * Math.PI);
-      this.ctx.fillStyle = 'rgb(' + (255 * this.grid[i][j]) + ',' + (255 * this.grid[i][j]) + ',' + (255 * this.grid[i][j]) + ')';
-      this.ctx.fill();
+      this.drawPoint(i, j, 1);
     }
   }
+}
+
+Canvas.prototype.drawLine = function (ax, ay, bx, by) {
+  this.ctx.beginPath();
+  this.ctx.moveTo(ax, ay);
+  this.ctx.lineTo(bx, by);
+  this.ctx.stroke();
 }
 
 Canvas.prototype.drawLines = function () {
@@ -51,8 +72,7 @@ Canvas.prototype.drawLines = function () {
       var y = i * this.res;
       var step = this.res;
       var halfStep = this.res * 0.5;
-
-      state = this.getState(i, j);
+      var state = this.getState(i, j);
 
       switch (state) {
         case 1:
@@ -86,25 +106,9 @@ Canvas.prototype.drawLines = function () {
         case 10:
           this.drawLine(x, y + halfStep, x + halfStep, y + step);
           this.drawLine(x + step, y + halfStep, x + halfStep, y);
-          break;
       }
     }
   }
-}
-
-Canvas.prototype.createBoard = function () {
-  this.ctx.fillStyle = "grey";
-  this.ctx.fillRect(0, 0, canvas.width, canvas.height);
-  this.createGrid()
-  this.drawPoints()
-  this.drawLines()
-}
-
-Canvas.prototype.drawLine = function (ax, ay, bx, by) {
-  this.ctx.beginPath();
-  this.ctx.moveTo(ax, ay);
-  this.ctx.lineTo(bx, by);
-  this.ctx.stroke();
 }
 
 function setup() {
