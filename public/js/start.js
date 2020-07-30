@@ -1,4 +1,5 @@
 function Canvas(width, height, res) {
+  this.control = document.getElementById("control");
   this.canvas = document.getElementById("canvas");
   this.ctx = this.canvas.getContext("2d");
   this.width = Math.round(width / res);
@@ -7,11 +8,13 @@ function Canvas(width, height, res) {
   this.canvas.height = height;
   this.res = res
   this.grid = [];
+  this.iter = 0;
+  this.animation;
 }
 
 Canvas.prototype.initialise = function () {
   this.createGrid();
-  this.drawBoard();
+  this.drawCanvas();
   this.drawPoints();
   this.drawLines();
 }
@@ -34,9 +37,13 @@ Canvas.prototype.getState = function (i, j) {
   return (a * 1) + (b * 2) + (c * 4) + (d * 8);
 }
 
-Canvas.prototype.drawBoard = function () {
+Canvas.prototype.drawCanvas = function () {
   this.ctx.fillStyle = "grey";
-  this.ctx.fillRect(0, 0, canvas.width, canvas.height);
+  this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+}
+
+Canvas.prototype.clearCanvas = function () {
+  this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 }
 
 Canvas.prototype.drawPoint = function (i, j, radius) {
@@ -111,9 +118,36 @@ Canvas.prototype.drawLines = function () {
   }
 }
 
-function setup() {
-  let board = new Canvas(window.innerWidth, window.innerHeight - 56, 15);
-  board.initialise();
+Canvas.prototype.iteration = function () {
+  this.iter++
+  this.createGrid();
+  this.clearCanvas();
+  this.drawCanvas();
+  this.drawPoints();
+  this.drawLines();
+  this.startAnimation();
 }
 
-setup();
+Canvas.prototype.startAnimation = function() {
+  this.animation = setTimeout(Canvas.prototype.iteration.bind(this), 400);
+  this.control.innerHTML = "Stop";
+}
+
+Canvas.prototype.stopAnimation = function() {
+  window.clearTimeout(this.animation);
+  this.control.innerHTML = "Start";
+}
+
+$(document).ready(function () {
+  let canvas = new Canvas(window.innerWidth, window.innerHeight - 56, 15);
+
+  canvas.initialise();
+
+  canvas.control.onclick = function () {
+    if (control.innerHTML == "Start") {
+      canvas.startAnimation();
+    } else {
+      canvas.stopAnimation();
+    }
+  }
+});
