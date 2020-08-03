@@ -1,3 +1,25 @@
+function MetaBall(x, y) {
+  this.x = x;
+  this.y = y;
+  this.angle = randomNumber(0, 2 * 3.14159265);
+  this.xspeed = randomNumber(1, 3) * Math.cos(this.angle);
+  this.yspeed = randomNumber(1, 3) * Math.sin(this.angle);
+  this.r = randomNumber(1, 2);
+}
+
+MetaBall.prototype.update = function (width, height) {
+  this.x += this.xspeed;
+  this.y += this.yspeed;
+
+  if (this.x > width || this.x < 0) {
+    this.xspeed *= -1;
+  };
+
+  if (this.y > height || this.y < 0) {
+    this.yspeed *= -1
+  };
+}
+
 function Canvas(width, height, res) {
   this.control = document.getElementById("control");
   this.canvas = document.getElementById("canvas");
@@ -10,10 +32,13 @@ function Canvas(width, height, res) {
   this.grid = [];
   this.iter = 0;
   this.animation;
+  this.metaBalls = [];
 }
 
 Canvas.prototype.initialise = function () {
-  this.createGrid();
+  this.addMetaBalls();
+  this.createMetaBallGrid();
+  //this.createGrid();
   this.drawCanvas();
   this.drawPoints();
   this.drawLines();
@@ -28,11 +53,39 @@ Canvas.prototype.createGrid = function () {
   }
 }
 
+Canvas.prototype.addMetaBalls = function () {
+  for (i = 0; i <= 7; i++) {
+    this.metaBalls.push(new MetaBall(randomNumber(0, this.height), randomNumber(0, this.width)));
+  }
+}
+
+Canvas.prototype.updateMetaBalls = function () {
+  for (i = 0; i < this.metaBalls.length; i++) {
+    this.metaBalls[i].update(this.height, this.width);
+  }
+}
+
+Canvas.prototype.createMetaBallGrid = function () {
+  for (x = 0; x <= this.height; x++) {
+    this.grid[x] = new Array(this.width);
+    for (y = 0; y <= this.width; y++) {
+      let sum = 0;
+      for (i = 0; i < this.metaBalls.length; i++) {
+        let xdif = x - this.metaBalls[i].x;
+        let ydif = y - this.metaBalls[i].y;
+        let d = Math.sqrt(xdif * xdif + ydif * ydif);
+        sum += (2 * this.metaBalls[i].r) / d;
+      }
+      this.grid[x][y] = sum;
+    }
+  }
+}
+
 Canvas.prototype.getState = function (i, j) {
-  var a = this.grid[i + 1][j];
-  var b = this.grid[i + 1][j + 1];
-  var c = this.grid[i][j + 1];
-  var d = this.grid[i][j];
+  var a = Math.floor(this.grid[i + 1][j]);
+  var b = Math.floor(this.grid[i + 1][j + 1]);
+  var c = Math.floor(this.grid[i][j + 1]);
+  var d = Math.floor(this.grid[i][j]);
 
   return (a * 1) + (b * 2) + (c * 4) + (d * 8);
 }
@@ -120,7 +173,9 @@ Canvas.prototype.drawLines = function () {
 
 Canvas.prototype.iteration = function () {
   this.iter++
-  this.createGrid();
+  this.updateMetaBalls();
+  this.createMetaBallGrid();
+  //this.createGrid();
   this.clearCanvas();
   this.drawCanvas();
   this.drawPoints();
@@ -129,13 +184,17 @@ Canvas.prototype.iteration = function () {
 }
 
 Canvas.prototype.startAnimation = function() {
-  this.animation = setTimeout(Canvas.prototype.iteration.bind(this), 400);
+  this.animation = setTimeout(Canvas.prototype.iteration.bind(this), 10);
   this.control.innerHTML = "Stop";
 }
 
 Canvas.prototype.stopAnimation = function() {
   window.clearTimeout(this.animation);
   this.control.innerHTML = "Start";
+}
+
+function randomNumber(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 $(document).ready(function () {
